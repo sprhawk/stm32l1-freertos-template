@@ -8,14 +8,15 @@ OPENOCD_ROOT = $(HOME)/Developer/prjs/embeded/openocd-bin-0.9.0/
 
 
 # System libraries paths
-SDK_ROOT = ../../STM32Cube_FW_L1_V1.6.0/
+SDK_ROOT = ../STM32Cube_FW_L1_V1.6.0/
 DRIVERS_ROOT = $(SDK_ROOT)Drivers/
 HAL_DRIVER_ROOT = $(DRIVERS_ROOT)STM32L1xx_HAL_Driver/
 CMSIS_ROOT = $(DRIVERS_ROOT)CMSIS/
 BSP_ROOT = $(DRIVERS_ROOT)BSP/
 MIDDLEWARE_ROOT = $(SDK_ROOT)Middlewares/
 
-FREERTOS_ROOT = ../freertos/
+# FreeRTOS
+FREERTOS_ROOT = $(MIDDLEWARE_ROOT)/Third_Party/FreeRTOS/Source/
 SEARCH_PATH += $(FREERTOS_ROOT)include/ $(FREERTOS_ROOT)portable/GCC/ARM_CM3/
 SEARCH_PATH += $(FREERTOS_ROOT)CMSIS_RTOS/
 FREERTOS_SOURCE += portable/GCC/ARM_CM3/port.c
@@ -122,7 +123,7 @@ C_SOURCE_FILES += stm32l1xx_hal_spi.c
 # C_SOURCE_FILES += stm32l1xx_hal_sram.c
 # C_SOURCE_FILES += stm32l1xx_hal_tim.c
 # C_SOURCE_FILES += stm32l1xx_hal_tim_ex.c
-# C_SOURCE_FILES += stm32l1xx_hal_uart.c
+C_SOURCE_FILES += stm32l1xx_hal_uart.c
 # C_SOURCE_FILES += stm32l1xx_hal_usart.c
 # C_SOURCE_FILES += stm32l1xx_hal_wwdg.c
 # C_SOURCE_FILES += stm32f4xx_ll_fmc.c
@@ -138,3 +139,7 @@ C_SOURCE_FILES += stm32l1xx_hal_spi.c
 # C_SOURCE_FILES += usbd_cdc.c
 
 include Makefile.config
+
+.PHONY: serial
+serial:
+	screen /dev/tty.usbmodem1413 115200 cs8 ixoff

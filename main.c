@@ -36,8 +36,12 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
+#include <stdarg.h>
+
 #include "main.h"
 #include "stm32l1xx_nucleo.h"
+
+#include "hal_config.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -57,12 +61,17 @@
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 static GPIO_InitTypeDef GPIO_InitStruct;
+static UART_HandleTypeDef UartHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void Error_Handler(void);
 
 static void LED_Task(void *argument);
+
+static void UART_Init(void);
+
+int uart_printf(const char * s, ...);
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -101,6 +110,10 @@ int main(void)
   GPIO_InitStruct.Pin = LED2_PIN;
   HAL_GPIO_Init(LED2_GPIO_PORT, &GPIO_InitStruct);
 
+  UART_Init();
+
+  uart_printf("Hello world\n");
+
   xTaskCreate(LED_Task, "LED", minSTACK_SIZE, (void *)NULL, tskIDLE_PRIORITY + 1, NULL);
 
   vTaskStartScheduler();
@@ -112,6 +125,39 @@ int main(void)
   }
 }
 
+void UART_Init(void)
+{
+    UartHandle.Instance = USARTx;
+    UartHandle.Init.BaudRate = 115200;
+    UartHandle.Init.WordLength = UART_WORDLENGTH_8B;
+    UartHandle.Init.StopBits = UART_STOPBITS_1;
+    UartHandle.Init.Parity = UART_PARITY_NONE;
+    UartHandle.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+    UartHandle.Init.Mode = UART_MODE_TX_RX;
+
+    if(HAL_UART_Init(&UartHandle) != HAL_OK) {
+        Error_Handler();
+    }
+}
+
+int uart_printf(const char * s, ...)
+{
+    static uint8_t buff[128+1];
+    va_list args;
+    va_start(args, s);
+
+    int iw = vsnprintf((char *)buff, sizeof(buff), s, args);
+
+    va_end(args);
+
+    if(HAL_OK != HAL_UART_Transmit(&UartHandle, buff, iw, 300)) {
+        Error_Handler();
+    }
+
+
+    return iw;
+}
+
 void LED_Task(void *argument)
 {
     while(1) {
@@ -119,6 +165,38 @@ void LED_Task(void *argument)
       vTaskDelay(1500 / portTICK_PERIOD_MS);
     }
 }
+
+void HAL_UART_MspInit(UART_HandleTypeDef *huart)
+{
+    GPIO_InitTypeDef GPIO_InitStruct;
+
+    USARTx_RX_GPIO_CLK_ENABLE();
+    USARTx_TX_GPIO_CLK_ENABLE();
+    USARTx_CLK_ENABLE();
+
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+
+    GPIO_InitStruct.Pin = USARTx_TX_PIN;
+    GPIO_InitStruct.Alternate = USARTx_TX_AF;
+    HAL_GPIO_Init(USARTx_TX_GPIO_PORT, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Alternate = USARTx_RX_AF;
+    GPIO_InitStruct.Pin = USARTx_RX_PIN;
+    HAL_GPIO_Init(USARTx_RX_GPIO_PORT, &GPIO_InitStruct);
+}
+
+void HAL_UART_MspDeInit(UART_HandleTypeDef *huart)
+{
+    USARTx_FORCE_RESET();
+    USARTx_RELEASE_RESET();
+
+    HAL_GPIO_DeInit(USARTx_TX_GPIO_PORT, USARTx_TX_PIN);
+    HAL_GPIO_DeInit(USARTx_RX_GPIO_PORT, USARTx_RX_PIN);
+}
+
+
 /**
   * @brief  System Clock Configuration
   *         The system Clock is configured as follow :
