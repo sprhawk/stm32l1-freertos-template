@@ -142,4 +142,4 @@ include Makefile.config
 
 .PHONY: serial
 serial:
-	screen /dev/tty.usbmodem1413 115200 cs8 ixoff
+	screen /dev/tty.usbmodem14233 115200,cs8,-ixon

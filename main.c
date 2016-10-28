@@ -112,15 +112,17 @@ int main(void)
 
   UART_Init();
 
-  uart_printf("Hello world\n");
+  uart_printf("Hello world\r\n");
 
   xTaskCreate(LED_Task, "LED", minSTACK_SIZE, (void *)NULL, tskIDLE_PRIORITY + 1, NULL);
 
   vTaskStartScheduler();
+
   /* Infinite loop */
   while (1)
   {
     // HAL_GPIO_TogglePin(LED2_GPIO_PORT, LED2_PIN);
+    uart_printf("Hello world");
     HAL_Delay(1000);
   }
 }
@@ -133,8 +135,11 @@ void UART_Init(void)
     UartHandle.Init.StopBits = UART_STOPBITS_1;
     UartHandle.Init.Parity = UART_PARITY_NONE;
     UartHandle.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-    UartHandle.Init.Mode = UART_MODE_TX_RX;
+    UartHandle.Init.Mode = UART_MODE_TX;
 
+    if(HAL_UART_DeInit(&UartHandle) != HAL_OK) {
+        Error_Handler();
+    }
     if(HAL_UART_Init(&UartHandle) != HAL_OK) {
         Error_Handler();
     }
@@ -150,7 +155,7 @@ int uart_printf(const char * s, ...)
 
     va_end(args);
 
-    if(HAL_OK != HAL_UART_Transmit(&UartHandle, buff, iw, 300)) {
+    if(HAL_OK != HAL_UART_Transmit(&UartHandle, buff, iw, 5000)) {
         Error_Handler();
     }
 
@@ -161,6 +166,7 @@ int uart_printf(const char * s, ...)
 void LED_Task(void *argument)
 {
     while(1) {
+      uart_printf("LED Task");
       HAL_GPIO_TogglePin(LED2_GPIO_PORT, LED2_PIN);
       vTaskDelay(1500 / portTICK_PERIOD_MS);
     }
