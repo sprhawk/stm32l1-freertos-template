@@ -19,11 +19,11 @@ MIDDLEWARE_ROOT = $(SDK_ROOT)Middlewares/
 FREERTOS_ROOT = $(MIDDLEWARE_ROOT)/Third_Party/FreeRTOS/Source/
 SEARCH_PATH += $(FREERTOS_ROOT)include/ $(FREERTOS_ROOT)portable/GCC/ARM_CM3/
 SEARCH_PATH += $(FREERTOS_ROOT)CMSIS_RTOS/
-FREERTOS_SOURCE += portable/GCC/ARM_CM3/port.c
-FREERTOS_SOURCE += portable/MemMang/heap_3.c
-FREERTOS_SOURCE += event_groups.c list.c queue.c timers.c tasks.c
-FREERTOS_SOURCE += CMSIS_RTOS/cmsis_os.c
-C_SOURCE_FILES += $(addprefix $(FREERTOS_ROOT), $(FREERTOS_SOURCE))
+C_SOURCE_PATH += $(FREERTOS_ROOT)
+C_SOURCE_FILES += portable/GCC/ARM_CM3/port.c
+C_SOURCE_FILES += portable/MemMang/heap_3.c
+C_SOURCE_FILES += event_groups.c list.c queue.c timers.c tasks.c
+C_SOURCE_FILES += CMSIS_RTOS/cmsis_os.c
 
 # Project source code path
 PROJECT_ROOT = $(shell pwd)/
